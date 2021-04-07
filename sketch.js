@@ -1,15 +1,21 @@
 var backImage,backgr;
 var player, player_running;
 var ground,ground_img;
-
+var bananImg;
 var END =0;
 var PLAY =1;
 var gameState = PLAY;
-
+var foodGrp;
+var score = 0;
+var obstacleimg;
+var obstacleGrp;
+var gameOverimg;
 function preload(){
   backImage=loadImage("jungle.jpg");
   player_running = loadAnimation("Monkey_01.png","Monkey_02.png","Monkey_03.png","Monkey_04.png","Monkey_05.png","Monkey_06.png","Monkey_07.png","Monkey_08.png","Monkey_09.png","Monkey_10.png");
-
+  bananImg = loadImage("banana.png");
+  obstacleimg = loadImage("stone.png");
+  gameOverimg = loadImage("gameOver.png")
 }
 
 function setup() {
@@ -28,7 +34,13 @@ function setup() {
   ground = createSprite(400,350,800,10);
   ground.x=ground.width/2;
   ground.visible=false;
+
+
+ 
   
+  foodGrp = createGroup();
+  obstacleGrp = createGroup();  
+
 }
 
 function draw() { 
@@ -36,18 +48,88 @@ function draw() {
 
   if(gameState===PLAY){
   
-  if(backgr.x<100){
-    backgr.x=backgr.width/2;
-  }
-  
+ 
     if(keyDown("space") ) {
       player.velocityY = -12;
     }
     player.velocityY = player.velocityY + 0.8;
   
+    if (foodGrp.isTouching(player)) {
+      foodGrp.destroyEach();
+      score += 2;
+      player.scale += 0.1;
+    }
+
     player.collide(ground);
+
+    spawnObstacles();
+    spawnBananas();
 
   }
 
+  if(backgr.x<100){
+    backgr.x=backgr.width/2;
+  }
+  
+
+  
+
+  if (obstacleGrp.isTouching(player)) {
+    gameState = END;
+  }
+
+  else if (gameState === END) {
+    backgr.velocityX = 0;
+    player.visible = false;
+
+    var gameOver = createSprite(400,200,20,20);
+    gameOver.addImage("gameOver",gameOverimg);
+
+    foodGrp.destroyEach();
+    obstacleGrp.destroyEach();
+
+    textSize(30);
+    fill(255);
+    text("GAME OVER!", 300,220);
+  }
+
+  
+  
   drawSprites();
+
+  textSize(30);
+  fill("white");
+  text("Score: " + score,650,50);
+}
+
+
+function spawnBananas() {
+  if (frameCount % 80 === 0){
+    var banana = createSprite(600,250,40,10);
+    banana.y = random(120,200);
+    banana.addImage(bananImg);
+    banana.scale = 0.05;
+    banana.velocityX = -4;
+
+    banana.lifetime = 300;
+    player.depth = banana.depth + 1;
+    foodGrp.add(banana);
+  }
+}
+
+function spawnObstacles() {
+  if (frameCount % 120 === 0) {
+    var obstacle = createSprite(610,247,40,10);
+    obstacle.x = 500;
+
+    obstacle.addImage("stoneimg",obstacleimg);
+    obstacle.scale = 0.3;
+    obstacle.velocityX = -4;
+
+    obstacle.lifetime = 400;
+
+    obstacle.debug = true;
+    obstacle.setCollider("rectangle",0,0,350,350);
+    obstacleGrp.add(obstacle);
+  }
 }
